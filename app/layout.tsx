@@ -1,3 +1,4 @@
+import ThemeProvider from "@/components/ThemeProvider";
 import "./globals.css";
 
 export default function RootLayout({
@@ -7,7 +8,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="bg-white text-black dark:bg-black dark:text-white p-4">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

@@ -1,3 +1,9 @@
+import MainJob from "@/components/MainJob";
+
 export default function Home() {
-  return <></>;
+  return (
+    <>
+      <MainJob />
+    </>
+  );
 }
