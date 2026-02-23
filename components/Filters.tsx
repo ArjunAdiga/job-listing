@@ -1,6 +1,6 @@
 import React from "react";
 import SelectDropdown from "./SelectDropdown";
-import { Box } from "@mui/material";
+import { Box, Switch } from "@mui/material";
 
 const Filters = ({
   dropdownOptions,
@@ -10,6 +10,8 @@ const Filters = ({
   setSelectedEmploymentType,
   selectedJobCategory,
   setSelectedJobCategory,
+  isRemoteWork,
+  setIsRemoteWork,
 }: {
   dropdownOptions: {
     locations: string[];
@@ -22,7 +24,10 @@ const Filters = ({
   setSelectedEmploymentType: (value: string[]) => void;
   selectedJobCategory: string;
   setSelectedJobCategory: (value: string) => void;
+  isRemoteWork: boolean;
+  setIsRemoteWork: (value: boolean) => void;
 }) => {
+  const isDark = localStorage.getItem("theme") === "dark";
   const fields = [
     {
       label: "Location",
@@ -53,7 +58,7 @@ const Filters = ({
     <>
       <Box className="w-full flex items-center flex-row flex-wrap gap-2">
         {fields?.map((field) => (
-          <>
+          <React.Fragment key={field.label}>
             <SelectDropdown
               value={field?.value || ""}
               label={field.label}
@@ -61,8 +66,23 @@ const Filters = ({
               multiple={field.multiple || false}
               setValue={field.setValue}
             />
-          </>
+          </React.Fragment>
         ))}
+        <Box className="flex items-center gap-1">
+          <h4 className="text-sm font-medium">Remote Work</h4>
+          <Switch
+            checked={isRemoteWork}
+            size="small"
+            onChange={(e) => setIsRemoteWork(e.target.checked)}
+            sx={{
+              "& .MuiSwitch-track": {
+                backgroundColor: isDark
+                  ? "white !important"
+                  : "blue !important",
+              },
+            }}
+          />
+        </Box>
       </Box>
     </>
   );

@@ -1,9 +1,10 @@
 "use client";
-import { Box, Skeleton } from "@mui/material";
+import { Box, Pagination, Skeleton, Switch } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import IndividualJob from "./IndividualJob";
 import { Job } from "@/types/job";
 import Filters from "./Filters";
+import Sort from "./Sort";
 
 const MainJob = () => {
   const [allJobs, setAllJobs] = useState<Job[]>([]);
@@ -19,6 +20,15 @@ const MainJob = () => {
     string[]
   >([]);
   const [selectedJobCategory, setSelectedJobCategory] = useState<string>("");
+  const [isRemoteWork, setIsRemoteWork] = useState<boolean>(false);
+  const [sort, setSort] = useState<string>("");
+  const [scrollType, setScrollType] = useState<"pagination" | "infinite">(
+    "pagination",
+  );
+  const [page, setPage] = useState(1);
+  const [visibleCount, setVisibleCount] = useState(10);
+  const jobsPerPage = 10;
+  const isDark = localStorage.getItem("theme") === "dark";
 
   useEffect(() => {
     const time = setTimeout(() => {
@@ -90,6 +100,36 @@ const MainJob = () => {
           .includes(selectedJobCategory.toLowerCase()),
       );
     }
+    if (isRemoteWork) {
+      result = result.filter((job) => job.is_remote_work);
+    }
+    if (sort) {
+      if (sort === "createdNew") {
+        result = result.sort((a, b) => {
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        });
+      } else if (sort === "createdOld") {
+        result = result.sort((a, b) => {
+          return (
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+        });
+      } else if (sort === "salary_high") {
+        result = result.sort((a, b) => b.salary_to - a.salary_to);
+      } else if (sort === "salary_low") {
+        result = result.sort((a, b) => a.salary_to - b.salary_to);
+      } else if (sort === "opening_high") {
+        result = result.sort(
+          (a, b) => b.number_of_opening - a.number_of_opening,
+        );
+      } else if (sort === "opening_low") {
+        result = result.sort(
+          (a, b) => a.number_of_opening - b.number_of_opening,
+        );
+      }
+    }
 
     return result;
   }, [
@@ -98,7 +138,49 @@ const MainJob = () => {
     selectedLocation,
     selectedEmploymentType,
     selectedJobCategory,
+    isRemoteWork,
+    sort,
   ]);
+
+  const paginatedJobs = useMemo(() => {
+    const start = (page - 1) * jobsPerPage;
+    const end = start + jobsPerPage;
+    return filteredJobs.slice(start, end);
+  }, [filteredJobs, page]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPage(1);
+  }, [
+    searchQuery,
+    selectedLocation,
+    selectedEmploymentType,
+    selectedJobCategory,
+    isRemoteWork,
+    sort,
+  ]);
+
+  const visibleJobs = useMemo(() => {
+    return filteredJobs.slice(0, visibleCount);
+  }, [filteredJobs, visibleCount]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+        document.body.offsetHeight - 200
+      ) {
+        setVisibleCount((prev) => prev + 10);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setVisibleCount(10);
+  }, [filteredJobs]);
   return (
     <>
       {loading ? (
@@ -114,7 +196,27 @@ const MainJob = () => {
         </>
       ) : (
         <Box className="flex flex-col gap-4">
-          <h2 className="text-2xl font-bold mb-4">Job Listings</h2>
+          <Box className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold mb-4">Job Listings</h2>
+            <Box className="flex flex-row align-items-center gap-2 justify-end">
+              <h4 className="text-lg font-regular">Pagination</h4>
+              <Switch
+                checked={scrollType === "infinite"}
+                size="small"
+                onChange={(e) =>
+                  setScrollType(e.target.checked ? "infinite" : "pagination")
+                }
+                sx={{
+                  "& .MuiSwitch-track": {
+                    backgroundColor: isDark
+                      ? "white !important"
+                      : "blue !important",
+                  },
+                }}
+              />
+              <h4 className="text-lg font-regular">Infinite scroll</h4>
+            </Box>
+          </Box>
           <>
             <Box className="flex items-center justify-between">
               <Filters
@@ -129,15 +231,20 @@ const MainJob = () => {
                 setSelectedEmploymentType={setSelectedEmploymentType}
                 selectedJobCategory={selectedJobCategory}
                 setSelectedJobCategory={setSelectedJobCategory}
+                isRemoteWork={isRemoteWork}
+                setIsRemoteWork={setIsRemoteWork}
               />
-              <input
-                type="search"
-                id="search"
-                className="block w-40  outline-none boxshadow-none p-3 ps-9 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand shadow-xs placeholder:text-body"
-                placeholder="Search"
-                onChange={(e) => setsearch(e.target.value)}
-                value={search}
-              />
+              <Box className="flex items-center gap-2">
+                <Sort sort={sort} setSort={setSort} />
+                <input
+                  type="search"
+                  id="search"
+                  className="block w-40  outline-none boxshadow-none p-3 ps-9 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand shadow-xs placeholder:text-body"
+                  placeholder="Search"
+                  onChange={(e) => setsearch(e.target.value)}
+                  value={search}
+                />
+              </Box>
             </Box>
             {filteredJobs?.length < 1 ? (
               <>
@@ -145,11 +252,23 @@ const MainJob = () => {
               </>
             ) : (
               <Box className="flex flex-col gap-4">
-                {filteredJobs?.map((job: Job) => (
-                  <React.Fragment key={job.id}>
-                    <IndividualJob job={job} />
-                  </React.Fragment>
-                ))}
+                {(scrollType === "infinite" ? visibleJobs : paginatedJobs)?.map(
+                  (job: Job) => (
+                    <React.Fragment key={job.id}>
+                      <IndividualJob job={job} />
+                    </React.Fragment>
+                  ),
+                )}
+                {scrollType === "pagination" && (
+                  <Box className="flex justify-center items-center">
+                    <Pagination
+                      count={Math.ceil(filteredJobs.length / jobsPerPage)}
+                      page={page}
+                      onChange={(e, value) => setPage(value)}
+                      sx={{ mt: 3 }}
+                    />
+                  </Box>
+                )}
               </Box>
             )}
           </>
