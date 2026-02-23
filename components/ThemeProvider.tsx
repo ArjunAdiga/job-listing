@@ -22,7 +22,7 @@ export default function ThemeProvider({
     setMounted(true);
   }, []);
 
-  if (!mounted) return null; // prevents hydration mismatch
+  if (!mounted) return null;
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
