@@ -1,4 +1,11 @@
-import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import {
+  Checkbox,
+  FormControl,
+  InputLabel,
+  ListItemText,
+  MenuItem,
+  Select,
+} from "@mui/material";
 
 const SelectDropdown = ({
   value,
@@ -33,10 +40,23 @@ const SelectDropdown = ({
             setValue(value);
           }}
           multiple={multiple}
+          renderValue={(selected) =>
+            Array.isArray(selected) ? selected.join(", ") : selected
+          }
         >
           {options.map((option) => (
             <MenuItem key={option} value={option}>
-              {option}
+              {multiple ? (
+                <>
+                  <Checkbox
+                    checked={Array.isArray(value) && value.indexOf(option) > -1}
+                    size="small"
+                  />
+                  <ListItemText primary={option} />
+                </>
+              ) : (
+                <ListItemText primary={option} />
+              )}
             </MenuItem>
           ))}
         </Select>
