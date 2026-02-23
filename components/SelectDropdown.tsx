@@ -20,8 +20,9 @@ const SelectDropdown = ({
         variant="outlined"
         size="small"
         sx={{ width: 200, height: 40 }}
+        className="dark:bg-gray-800"
       >
-        <InputLabel>{label}</InputLabel>
+        <InputLabel className="dark:bg-gray-800">{label}</InputLabel>
         <Select
           value={value}
           label={label}
